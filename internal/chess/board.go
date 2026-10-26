@@ -17,7 +17,8 @@ func (c Color) String() string {
 type Kind int8
 
 const (
-	Pawn Kind = iota
+	NoKind Kind = iota
+	Pawn
 	Knight
 	Bishop
 	Rook
@@ -25,16 +26,16 @@ const (
 	King
 )
 
-var values = [...]int8{Pawn: 1, Knight: 3, Bishop: 3, Rook: 5, Queen: 9, King: 0}
+var values = [...]int{NoKind: 0, Pawn: 1, Knight: 3, Bishop: 3, Rook: 5, Queen: 9, King: 0}
 
 type Piece struct {
 	Kind  Kind
 	Color Color
 }
 
-func (p Piece) Value() int8 {
-	return values[p.Kind]
-}
+func (p Piece) Empty() bool { return p.Kind == NoKind }
+
+func (p Piece) Value() int { return values[p.Kind] }
 
 type Square int8
 
