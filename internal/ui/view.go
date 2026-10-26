@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	squareW = 7
+	squareW = 8
 	squareH = 3
 )
 
@@ -19,6 +19,7 @@ var (
 	colDark          = lipgloss.Color("#719352")
 	colLightSelected = lipgloss.Color("#eeef7f")
 	colDarkSelected  = lipgloss.Color("#b3c542")
+	colPiece         = lipgloss.Color("#000000")
 )
 
 var (
@@ -64,10 +65,22 @@ func (m model) renderSquare(sq chess.Square) []string {
 		}
 	}
 
-	base := lipgloss.NewStyle().Background(bg)
+	base := lipgloss.NewStyle().Background(bg).Foreground(colPiece)
+
+	p := m.game.Board[sq]
+	char := solidGlyphs[p.Kind]
+	if p.Color == chess.White {
+		char = hollowGlyphs[p.Kind]
+	}
+
+	pad := strings.Repeat(" ", (squareW-2)/2)
 
 	for i := 0; i < squareH; i++ {
-		rows = append(rows, base.Render(strings.Repeat(" ", squareW)))
+		if i == squareH/2 {
+			rows = append(rows, base.Render(pad+char+" "+pad))
+		} else {
+			rows = append(rows, base.Render(strings.Repeat(" ", squareW)))
+		}
 	}
 	return rows
 }
