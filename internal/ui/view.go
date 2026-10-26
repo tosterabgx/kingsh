@@ -53,14 +53,16 @@ func (m model) renderSquare(sq chess.Square) []string {
 
 	var bg color.Color
 
-	if sq.Light() {
-		bg = colLight
-		if sq == m.cursor {
+	if sq == m.cursor {
+		if sq.Light() {
 			bg = colLightSelected
+		} else {
+			bg = colDarkSelected
 		}
 	} else {
-		bg = colDark
-		if sq == m.cursor {
+		if sq.Light() {
+			bg = colLightSelected
+		} else {
 			bg = colDarkSelected
 		}
 	}

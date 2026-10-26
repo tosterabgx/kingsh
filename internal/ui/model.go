@@ -6,8 +6,9 @@ import (
 )
 
 type model struct {
-	game   *chess.Game
-	cursor chess.Square
+	game     *chess.Game
+	cursor   chess.Square
+	selected chess.Square
 }
 
 func New() model {
@@ -32,6 +33,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.moveCursor(-1, 0)
 		case "right":
 			m.moveCursor(1, 0)
+		case "enter":
+			m.selected = m.cursor
 		}
 	}
 

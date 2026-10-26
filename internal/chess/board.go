@@ -14,6 +14,13 @@ func (c Color) String() string {
 	return "Black"
 }
 
+func (c Color) Other() Color {
+	if c == White {
+		return Black
+	}
+	return White
+}
+
 type Kind int8
 
 const (
