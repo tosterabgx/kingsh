@@ -61,9 +61,9 @@ func (m model) renderSquare(sq chess.Square) []string {
 		}
 	} else {
 		if sq.Light() {
-			bg = colLightSelected
+			bg = colLight
 		} else {
-			bg = colDarkSelected
+			bg = colDark
 		}
 	}
 
