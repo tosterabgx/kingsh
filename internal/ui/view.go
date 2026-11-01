@@ -36,7 +36,7 @@ var (
 )
 
 func (m model) View() tea.View {
-	v := tea.NewView(m.renderBoard())
+	v := tea.NewView(m.renderBoard() + "\n\n" + m.statusLine())
 	v.AltScreen = true
 	v.WindowTitle = "kingsh"
 	return v
@@ -109,4 +109,18 @@ func (m model) renderSquare(sq chess.Square) []string {
 		}
 	}
 	return rows
+}
+
+func (m model) statusLine() string {
+	g := m.game
+	switch g.Status() {
+	case chess.Checkmate:
+		return "Checkmate, " + g.Turn.Other().String() + " wins"
+	case chess.Stalemate:
+		return "Stalemate"
+	}
+	if g.InCheck(g.Turn) {
+		return g.Turn.String() + " to move, check"
+	}
+	return g.Turn.String() + " to move"
 }
