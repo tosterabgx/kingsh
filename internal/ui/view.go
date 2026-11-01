@@ -15,11 +15,19 @@ const (
 )
 
 var (
-	colLight         = lipgloss.Color("#e4e6cb")
-	colDark          = lipgloss.Color("#719352")
-	colLightSelected = lipgloss.Color("#eeef7f")
-	colDarkSelected  = lipgloss.Color("#b3c542")
-	colPiece         = lipgloss.Color("#000000")
+	colLight = lipgloss.Color("#e4e6cb")
+	colDark  = lipgloss.Color("#719352")
+
+	colLightHighlighted = lipgloss.Color("#f6f6ed")
+	colDarkHighlighted  = lipgloss.Color("#cdd9c2")
+
+	colLightSelected = lipgloss.Color("#f1f27f")
+	colDarkSelected  = lipgloss.Color("#b8c942")
+
+	colLightHint = lipgloss.Color("#c4c6af")
+	colDarkHint  = lipgloss.Color("#617e46")
+
+	colPiece = lipgloss.Color("#000000")
 )
 
 var (
@@ -53,21 +61,31 @@ func (m model) renderSquare(sq chess.Square) []string {
 
 	var bg color.Color
 
-	if sq == m.cursor {
+	switch {
+	case sq == m.selected:
+		bg = colDarkSelected
 		if sq.Light() {
 			bg = colLightSelected
-		} else {
-			bg = colDarkSelected
 		}
-	} else {
+	case sq == m.cursor:
+		bg = colDarkHighlighted
+		if sq.Light() {
+			bg = colLightHighlighted
+		}
+	default:
+		bg = colDark
 		if sq.Light() {
 			bg = colLight
-		} else {
-			bg = colDark
 		}
 	}
 
 	base := lipgloss.NewStyle().Background(bg).Foreground(colPiece)
+
+	hintCol := colDarkHint
+	if sq.Light() {
+		hintCol = colLightHint
+	}
+	hint := lipgloss.NewStyle().Background(bg).Foreground(hintCol)
 
 	p := m.game.Board[sq]
 	char := solidGlyphs[p.Kind]
@@ -75,11 +93,17 @@ func (m model) renderSquare(sq chess.Square) []string {
 		char = hollowGlyphs[p.Kind]
 	}
 
+	target := m.selected != chess.NoSquare && m.game.CanMove(m.selected, sq)
+
 	pad := strings.Repeat(" ", (squareW-2)/2)
+	middle := base.Render(pad + char + " " + pad)
+	if target && p.Empty() {
+		middle = hint.Render(pad + "●" + " " + pad)
+	}
 
 	for i := 0; i < squareH; i++ {
 		if i == squareH/2 {
-			rows = append(rows, base.Render(pad+char+" "+pad))
+			rows = append(rows, middle)
 		} else {
 			rows = append(rows, base.Render(strings.Repeat(" ", squareW)))
 		}

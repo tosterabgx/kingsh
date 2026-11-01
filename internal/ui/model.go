@@ -12,7 +12,7 @@ type model struct {
 }
 
 func New() model {
-	return model{game: chess.NewGame(), cursor: chess.Sq(4, 1)}
+	return model{game: chess.NewGame(), cursor: chess.Sq(4, 1), selected: chess.NoSquare}
 }
 
 func (m model) Init() tea.Cmd {
@@ -34,7 +34,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right":
 			m.moveCursor(1, 0)
 		case "enter":
-			m.selected = m.cursor
+			m.activate()
+		case "esc":
+			m.selected = chess.NoSquare
 		}
 	}
 
@@ -45,4 +47,15 @@ func (m *model) moveCursor(dx, dy int) {
 	f := max(0, min(7, m.cursor.File()+dx))
 	r := max(0, min(7, m.cursor.Rank()+dy))
 	m.cursor = chess.Sq(f, r)
+}
+
+func (m *model) activate() {
+	p := m.game.Board[m.cursor]
+	switch {
+	case !p.Empty() && p.Color == m.game.Turn:
+		m.selected = m.cursor
+	case m.selected != chess.NoSquare:
+		m.game.Move(m.selected, m.cursor)
+		m.selected = chess.NoSquare
+	}
 }

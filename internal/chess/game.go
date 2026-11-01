@@ -13,7 +13,7 @@ func NewGame() *Game {
 	return &Game{Board: StartingBoard(), Turn: White}
 }
 
-func (g Game) Move(from, to Square) bool {
+func (g *Game) Move(from, to Square) bool {
 	if from == to {
 		return false
 	}

@@ -51,6 +51,8 @@ func (s Square) File() int     { return int(s) % 8 }
 func (s Square) Rank() int     { return int(s) / 8 }
 func (s Square) Light() bool   { return (s.File()+s.Rank())%2 == 1 }
 
+const NoSquare Square = -1
+
 type Board [64]Piece
 
 func StartingBoard() Board {
