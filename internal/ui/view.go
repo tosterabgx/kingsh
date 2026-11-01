@@ -36,7 +36,8 @@ var (
 )
 
 func (m model) View() tea.View {
-	v := tea.NewView(m.renderBoard() + "\n\n" + m.statusLine())
+	content := lipgloss.JoinHorizontal(lipgloss.Top, m.renderBoard(), "    ", m.renderPanel())
+	v := tea.NewView(content)
 	v.AltScreen = true
 	v.WindowTitle = "kingsh"
 	return v
@@ -119,6 +120,10 @@ func (m model) statusLine() string {
 			line += " " + pk.key + " " + solidGlyphs[pk.kind]
 		}
 		return line + "  esc cancel"
+	}
+
+	if m.timeout {
+		return g.Turn.Other().String() + " wins on time"
 	}
 
 	switch g.Status() {
