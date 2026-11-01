@@ -113,6 +113,14 @@ func (m model) renderSquare(sq chess.Square) []string {
 
 func (m model) statusLine() string {
 	g := m.game
+	if m.promotion != nil {
+		line := "Promote to:"
+		for _, pk := range promotionKeys {
+			line += " " + pk.key + " " + solidGlyphs[pk.kind]
+		}
+		return line + "  esc cancel"
+	}
+
 	switch g.Status() {
 	case chess.Checkmate:
 		return "Checkmate, " + g.Turn.Other().String() + " wins"

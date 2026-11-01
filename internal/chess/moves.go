@@ -63,9 +63,20 @@ func (g *Game) pawnMoves(from Square, c Color) []Square {
 		to := Sq(f+df, r+dir)
 		if t := g.Board[to]; !t.Empty() && t.Color != c {
 			out = append(out, to)
+		} else if g.canEnPassant(from, to, c) {
+			out = append(out, to)
 		}
 	}
 	return out
+}
+
+func (g *Game) canEnPassant(from, to Square, c Color) bool {
+	epRank := 5
+	if c == Black {
+		epRank = 2
+	}
+	passed := g.Board[Sq(to.File(), from.Rank())]
+	return to == g.EnPassant && to.Rank() == epRank && passed == Piece{Pawn, c.Other()}
 }
 
 func (g *Game) stepMoves(from Square, c Color, steps [][2]int) []Square {
