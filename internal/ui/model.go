@@ -33,7 +33,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.moveCursor(-1, 0)
 		case "right":
 			m.moveCursor(1, 0)
-		case "enter":
+		case "enter", "space":
 			m.activate()
 		case "esc":
 			m.selected = chess.NoSquare

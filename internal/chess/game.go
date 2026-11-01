@@ -14,22 +14,20 @@ func NewGame() *Game {
 }
 
 func (g *Game) Move(from, to Square) bool {
-	if from == to {
-		return false
-	}
-	target := g.Board[to]
-	if !target.Empty() && target.Color == g.Turn {
+	p := g.Board[from]
+	if p.Empty() || p.Color != g.Turn || !g.CanMove(from, to) {
 		return false
 	}
 
-	if !target.Empty() {
+	if target := g.Board[to]; !target.Empty() {
 		g.Captured[g.Turn] = append(g.Captured[g.Turn], target)
 	}
 
-	p := g.Board[from]
+	// TODO: promotion
 	if p.Kind == Pawn && (to.Rank() == 0 || to.Rank() == 7) {
 		p.Kind = Queen
 	}
+
 	g.Board[to], g.Board[from] = p, Piece{}
 	g.Last = &Move{from, to}
 	g.Turn = g.Turn.Other()

@@ -8,7 +8,7 @@ var (
 	queenDirs   = append(append([][2]int{}, rookDirs...), bishopDirs...)
 )
 
-func (g *Game) LegalMoves(from Square) []Square {
+func (g *Game) possibleMoves(from Square) []Square {
 	p := g.Board[from]
 	switch p.Kind {
 	case Pawn:
