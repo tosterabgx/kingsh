@@ -4,6 +4,13 @@ Chess in your terminal. Play a friend on the same keyboard or a real opponent on
 
 ![kingsh](demo.png)
 
+# Features
+
+- All chess rules, including en passant!
+- All draws conditions are considered.
+- Clocks with increment, any time control (`-tc 3+2`, `-tc 10+0`, ...)
+- Online play on lichess with resign, draw offers and automatic reconnecting
+
 ## Install
 
 **Download a binary** from the
