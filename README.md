@@ -55,3 +55,7 @@ kingsh draws the pieces with the Unicode chess symbols (♔♕♖♗♘♙ ♚�
 - **A font with the chess symbols.**
 
 Tested on kitty.
+
+## License
+
+MIT licensed
