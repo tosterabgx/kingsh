@@ -15,15 +15,20 @@ type Game struct {
 
 	CanCastle [2][2]bool
 	EnPassant Square
+
+	HalfMoves int
+	history   []position
 }
 
 func NewGame() *Game {
-	return &Game{
+	g := &Game{
 		Board:     StartingBoard(),
 		Turn:      White,
 		CanCastle: [2][2]bool{{true, true}, {true, true}},
 		EnPassant: NoSquare,
 	}
+	g.history = []position{g.position()}
+	return g
 }
 
 func (g *Game) IsPromotion(from, to Square) bool {
@@ -43,7 +48,8 @@ func (g *Game) MovePromote(from, to Square, promo Kind) bool {
 		return false
 	}
 
-	if captured := g.Board.play(from, to, promo); !captured.Empty() {
+	captured := g.Board.play(from, to, promo)
+	if !captured.Empty() {
 		g.Captured[g.Turn] = append(g.Captured[g.Turn], captured)
 	}
 	g.updateCastling(from, to)
@@ -55,6 +61,13 @@ func (g *Game) MovePromote(from, to Square, promo Kind) bool {
 
 	g.Last = &Move{from, to}
 	g.Turn = g.Turn.Other()
+	if p.Kind == Pawn || !captured.Empty() {
+		g.HalfMoves = 0
+		g.history = nil
+	} else {
+		g.HalfMoves++
+	}
+	g.history = append(g.history, g.position())
 	return true
 }
 

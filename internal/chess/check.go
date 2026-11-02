@@ -6,6 +6,9 @@ const (
 	Playing Status = iota
 	Checkmate
 	Stalemate
+	InsufficientMaterial
+	FiftyMoves
+	Repetition
 )
 
 func (g *Game) LegalMoves(from Square) []Square {
@@ -121,13 +124,28 @@ func (g *Game) InCheck(c Color) bool {
 }
 
 func (g *Game) Status() Status {
+	if !g.hasLegalMove() {
+		if g.InCheck(g.Turn) {
+			return Checkmate
+		}
+		return Stalemate
+	}
+	switch {
+	case g.InsufficientMaterial():
+		return InsufficientMaterial
+	case g.HalfMoves >= 100:
+		return FiftyMoves
+	case g.Repetitions() >= 3:
+		return Repetition
+	}
+	return Playing
+}
+
+func (g *Game) hasLegalMove() bool {
 	for s := Square(0); s < 64; s++ {
 		if p := g.Board[s]; !p.Empty() && p.Color == g.Turn && len(g.LegalMoves(s)) > 0 {
-			return Playing
+			return true
 		}
 	}
-	if g.InCheck(g.Turn) {
-		return Checkmate
-	}
-	return Stalemate
+	return false
 }

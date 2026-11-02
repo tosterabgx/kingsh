@@ -123,7 +123,11 @@ func (m model) statusLine() string {
 	}
 
 	if m.timeout {
-		return g.Turn.Other().String() + " wins on time"
+		winner := g.Turn.Other()
+		if !g.HasMatingMaterial(winner) {
+			return "Draw: timeout vs insufficient material"
+		}
+		return winner.String() + " wins on time"
 	}
 
 	switch g.Status() {
@@ -131,6 +135,12 @@ func (m model) statusLine() string {
 		return "Checkmate, " + g.Turn.Other().String() + " wins"
 	case chess.Stalemate:
 		return "Stalemate"
+	case chess.InsufficientMaterial:
+		return "Draw by insufficient material"
+	case chess.FiftyMoves:
+		return "Draw by 50-move rule"
+	case chess.Repetition:
+		return "Draw by threefold repetition"
 	}
 	if g.InCheck(g.Turn) {
 		return g.Turn.String() + " to move, check"
