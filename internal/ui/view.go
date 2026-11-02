@@ -45,9 +45,17 @@ func (m model) View() tea.View {
 
 func (m model) renderBoard() string {
 	rows := make([]string, 0, 8*squareH)
-	for rank := 7; rank >= 0; rank-- {
+	for row := range 8 {
+		rank := 7 - row
+		if m.flipped() {
+			rank = row
+		}
 		lines := make([]string, squareH)
-		for file := range 8 {
+		for col := range 8 {
+			file := col
+			if m.flipped() {
+				file = 7 - col
+			}
 			for i, s := range m.renderSquare(chess.Sq(file, rank)) {
 				lines[i] += s
 			}
@@ -120,6 +128,10 @@ func (m model) statusLine() string {
 			line += " " + pk.key + " " + solidGlyphs[pk.kind]
 		}
 		return line + "  esc cancel"
+	}
+
+	if m.online != nil {
+		return m.onlineStatus()
 	}
 
 	if m.timeout {

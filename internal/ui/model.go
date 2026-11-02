@@ -14,6 +14,7 @@ type model struct {
 	timeout   bool
 	selected  chess.Square
 	promotion *chess.Move
+	online    *online
 }
 
 var promotionKeys = []struct {
@@ -42,27 +43,56 @@ func New(base, inc time.Duration) model {
 }
 
 func (m model) Init() tea.Cmd {
+	if m.online != nil {
+		return tea.Batch(tick(), m.online.start())
+	}
 	return tick()
 }
 
 func (m model) over() bool {
+	if m.online != nil {
+		return m.online.finished()
+	}
 	return m.timeout || m.game.Status() != chess.Playing
 }
 
+func (m model) canMove() bool {
+	if m.online != nil {
+		o := m.online
+		return o.active() && m.game.Turn == o.me && len(o.played) == len(o.confirmed)
+	}
+	return !m.over()
+}
+
+func (m model) flipped() bool {
+	return m.online != nil && m.online.me == chess.Black
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.online != nil {
+		if cmd, ok := m.updateOnline(msg); ok {
+			return m, cmd
+		}
+	}
+
 	switch msg := msg.(type) {
 	case tickMsg:
-		if !m.timeout && m.clock.Update(time.Time(msg)) {
+		if m.clock.Update(time.Time(msg)) && m.online == nil && !m.timeout {
 			m.flagFell()
 		}
 		return m, tick()
 	case tea.KeyPressMsg:
-		if m.promotion != nil && msg.String() != "ctrl+c" {
-			m.choosePromotion(msg.String())
-			return m, nil
+		key := msg.String()
+		if m.online != nil {
+			if cmd, ok := m.onlineKey(key); ok {
+				return m, cmd
+			}
+		}
+		if m.promotion != nil && key != "ctrl+c" {
+			return m, m.choosePromotion(key)
 		}
 
-		switch msg.String() {
+		switch key {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "up":
@@ -74,7 +104,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right":
 			m.moveCursor(1, 0)
 		case "enter", "space":
-			m.activate()
+			return m, m.activate()
 		case "esc":
 			m.selected = chess.NoSquare
 		}
@@ -84,14 +114,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) moveCursor(dx, dy int) {
+	if m.flipped() {
+		dx, dy = -dx, -dy
+	}
 	f := max(0, min(7, m.cursor.File()+dx))
 	r := max(0, min(7, m.cursor.Rank()+dy))
 	m.cursor = chess.Sq(f, r)
 }
 
-func (m *model) activate() {
-	if m.over() {
-		return
+func (m *model) activate() tea.Cmd {
+	if !m.canMove() {
+		return nil
 	}
 	from, to := m.selected, m.cursor
 	p := m.game.Board[to]
@@ -101,43 +134,50 @@ func (m *model) activate() {
 	case from != chess.NoSquare:
 		if m.game.IsPromotion(from, to) && m.game.CanMove(from, to) {
 			m.promotion = &chess.Move{From: from, To: to}
-			return
+			return nil
 		}
-		m.play(from, to, chess.Queen)
 		m.selected = chess.NoSquare
+		return m.play(from, to, chess.Queen)
 	}
+	return nil
 }
 
-func (m *model) choosePromotion(key string) {
+func (m *model) choosePromotion(key string) tea.Cmd {
 	if key == "esc" {
 		m.promotion = nil
-		return
+		return nil
 	}
 
 	for _, pk := range promotionKeys {
 		if key == pk.key {
-			m.play(m.promotion.From, m.promotion.To, pk.kind)
+			from, to := m.promotion.From, m.promotion.To
 			m.promotion = nil
 			m.selected = chess.NoSquare
-			return
+			return m.play(from, to, pk.kind)
 		}
 	}
+	return nil
 }
 
-func (m *model) play(from, to chess.Square, promo chess.Kind) {
+func (m *model) play(from, to chess.Square, promo chess.Kind) tea.Cmd {
+	if m.online != nil {
+		return m.playOnline(from, to, promo)
+	}
+
 	now := time.Now()
 	if m.clock.Update(now) {
 		m.flagFell()
-		return
+		return nil
 	}
 	mover := m.game.Turn
 	if !m.game.MovePromote(from, to, promo) {
-		return
+		return nil
 	}
 	m.clock.Press(now, mover)
 	if m.game.Status() != chess.Playing {
 		m.clock.Stop()
 	}
+	return nil
 }
 
 func (m *model) flagFell() {

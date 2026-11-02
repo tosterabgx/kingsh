@@ -32,22 +32,52 @@ var (
 func (m model) renderPanel() string {
 	h := 8 * squareH
 
-	top := append(m.clockBox(chess.Black), "", m.nameLine(chess.Black), m.capturedLine(chess.Black))
-	bottom := []string{m.capturedLine(chess.White), m.nameLine(chess.White), ""}
-	bottom = append(bottom, m.clockBox(chess.White)...)
+	bottomColor := chess.White
+	if m.flipped() {
+		bottomColor = chess.Black
+	}
+	topColor := bottomColor.Other()
+
+	top := append(m.clockBox(topColor), "", m.nameLine(topColor), m.capturedLine(topColor))
+	bottom := []string{m.capturedLine(bottomColor), m.nameLine(bottomColor), ""}
+	bottom = append(bottom, m.clockBox(bottomColor)...)
 
 	middle := make([]string, max(0, h-len(top)-len(bottom)))
 	if len(middle) > 0 {
-		middle[(len(middle)-1)/2] = m.statusLine()
+		mid := (len(middle) - 1) / 2
+		middle[mid] = m.statusLine()
+		if help := m.helpLine(); help != "" && mid+2 < len(middle) {
+			middle[mid+2] = lipgloss.NewStyle().Foreground(colMuted).Render(help)
+		}
 	}
 
 	lines := slices.Concat(top, middle, bottom)
 	return strings.Join(lines[:h], "\n")
-
 }
 
 func (m model) nameLine(c chess.Color) string {
-	return lipgloss.NewStyle().Bold(true).Render(c.String())
+	name := lipgloss.NewStyle().Bold(true).Render(c.String())
+	if m.online == nil || m.online.seeking() {
+		return name
+	}
+
+	p := m.online.player(c)
+	title := ""
+	if p.Title != "" {
+		title = p.Title + " "
+	}
+	name = lipgloss.NewStyle().Bold(true).Render(title + p.Name)
+	if p.Rating > 0 {
+		name += lipgloss.NewStyle().Foreground(colMuted).Render(" (" + strconv.Itoa(p.Rating) + ")")
+	}
+	return name
+}
+
+func (m model) helpLine() string {
+	if m.online == nil {
+		return ""
+	}
+	return m.onlineHelp()
 }
 
 func (m model) capturedLine(c chess.Color) string {
