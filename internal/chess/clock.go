@@ -60,3 +60,10 @@ func ParseTimeControl(s string) (base, inc time.Duration, err error) {
 	}
 	return time.Duration(m * float64(time.Minute)), time.Duration(i * float64(time.Second)), nil
 }
+
+func (c *Clock) Set(white, black time.Duration, active Color, running bool, now time.Time) {
+	c.Left = [2]time.Duration{white, black}
+	c.Active = active
+	c.Running = running
+	c.last = now
+}
